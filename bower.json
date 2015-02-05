@@ -1,0 +1,13 @@
+{
+  "name": "bitrisk",
+  "version": "0.0.1",
+  "dependencies": {
+    "bootstrap": "~3.2.0",
+    "todc-bootstrap": "~3.0.2",
+    "bootstrap-filestyle": "~1.1.2",
+    "fontawesome": "latest",
+    "bootstrap-select": "latest",
+    "prismjs": "*"
+  },
+  "private": true
+}
