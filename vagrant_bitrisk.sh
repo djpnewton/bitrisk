@@ -2,8 +2,7 @@
 
 set -e
 
-SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
-cd SCRIPT_DIR
+cd /vagrant
 
 export VENV_PATH=$HOME
 python setup_dependancies.py
