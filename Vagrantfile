@@ -4,6 +4,7 @@
 Vagrant.configure(2) do |config|
   config.vm.box = "hashicorp/precise32"
   config.vm.network :forwarded_port, host: 5000, guest: 5000
+  config.vm.network :forwarded_port, host: 8888, guest: 8888
 
   config.vm.provision :shell, path: "vagrant_bootstrap.sh"
   config.vm.provision :shell, path: "vagrant_bitrisk.sh", privileged: "false"

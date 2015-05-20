@@ -6,8 +6,7 @@
     "todc-bootstrap": "~3.0.2",
     "bootstrap-filestyle": "~1.1.2",
     "fontawesome": "latest",
-    "bootstrap-select": "latest",
-    "prismjs": "*"
+    "bootstrap-select": "latest"
   },
   "private": true
 }

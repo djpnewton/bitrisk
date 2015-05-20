@@ -2,7 +2,10 @@
 
 set -e
 
+apt-get install -y python-software-properties
+add-apt-repository ppa:bitcoin/bitcoin
 apt-get update
+apt-get install -y bitcoind
 apt-get install -y vim
 apt-get install -y python-virtualenv
 apt-get install -y git

@@ -35,6 +35,7 @@ call([PIP, 'install', 'flask_sqlalchemy'])
 call([PIP, 'install', 'flask_kvsession'])
 call([PIP, 'install', 'flask_seasurf'])
 call([PIP, 'install', 'flask_limiter'])
+call([PIP, 'install', 'websocket-server'])
 
 # install bower dependencies
 shell=False

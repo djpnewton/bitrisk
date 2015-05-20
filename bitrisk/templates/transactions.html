@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Welcome to BitRisk</title>
+
+    <!-- Bootstrap Core CSS -->
+    <!-- CSS
+  ================================================== -->
+    <link rel="stylesheet" href="/static/b/bootstrap/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/static/b/todc-bootstrap/dist/css/todc-bootstrap.min.css">
+    <link rel="stylesheet" href="/static/b/fontawesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="/static/b/bootstrap-select/dist/css/bootstrap-select.min.css">
+    
+    <!-- Custom CSS -->
+    <link href="/static/stylesheets/landing-page.css" rel="stylesheet">
+    <link rel="stylesheet" href="/static/stylesheets/style.css">
+
+
+    <script type="text/javascript" src="/static/b/jquery/dist/jquery.min.js"></script>
+    <script type="text/javascript" src="/static/b/bootstrap/dist/js/bootstrap.min.js"></script>
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+</head>
+
+<body>
+
+<script>
+
+//'ws'
+var ws_url = 'ws://'+location.hostname+':8888';
+alert(ws_url);
+
+var sock = new WebSocket(ws_url);
+sock.onopen = function() {
+    console.log('open');
+};
+sock.onmessage = function(e) {
+    console.log('message', e.data);
+};
+sock.onclose = function() {
+    console.log('close');
+};
+
+sock.send('test');
+sock.close();
+</script>
+
+
+</body>
+
+</html>

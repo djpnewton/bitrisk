@@ -54,6 +54,10 @@ def landing():
         return render_template('landing.html')
     return redirect(url_for('home'))
 
+@app.route('/transactions')
+def txs():
+    return render_template('transactions.html')
+
 @app.route('/home')
 def home():
     return render_template('home.html')
