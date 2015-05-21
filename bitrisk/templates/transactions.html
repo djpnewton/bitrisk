@@ -37,26 +37,25 @@
 </head>
 
 <body>
+<div id="bitcoin_events"></div>
 
 <script>
 
-//'ws'
 var ws_url = 'ws://'+location.hostname+':8888';
-alert(ws_url);
-
 var sock = new WebSocket(ws_url);
 sock.onopen = function() {
     console.log('open');
 };
 sock.onmessage = function(e) {
-    console.log('message', e.data);
+    var data = e.data;
+    console.log('message', data);
+    var e = document.getElementById('bitcoin_events');
+    e.innerHTML += data + '</br>';
 };
 sock.onclose = function() {
     console.log('close');
 };
 
-sock.send('test');
-sock.close();
 </script>
 
 
