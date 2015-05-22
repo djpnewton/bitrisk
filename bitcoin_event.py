@@ -1,11 +1,13 @@
 #!/usr/bin/python
 import sqlite3
 import os
+from threading import Lock
 
 db_filename = 'bitcoin_events.db'
 db_filename = os.path.join(os.path.dirname(os.path.realpath(__file__)), db_filename)
 
 # connect db
+db_lock = Lock()
 conn = sqlite3.connect(db_filename)
 
 # create tables
@@ -18,14 +20,14 @@ c.close()
 conn.commit()
 
 def process_tx(tx):
-    print 'tx', tx
-    conn.execute('insert into txs (tx, processed) values (?, 0)', (tx,))
-    conn.commit()
+    with db_lock:
+        conn.execute('insert into txs (tx, processed) values (?, 0)', (tx,))
+        conn.commit()
 
 def process_block(block):
-    print 'block', block
-    conn.execute('insert into blocks (block, processed) values (?, 0)', (block,))
-    conn.commit()
+    with db_lock:
+        conn.execute('insert into blocks (block, processed) values (?, 0)', (block,))
+        conn.commit()
 
 def check_db(conn):
     items = []
@@ -48,7 +50,8 @@ def serve(port, host):
     def service_thread(ws_server, evt):
         conn = sqlite3.connect(db_filename)
         while not evt.wait(5):
-            res = check_db(conn)
+            with db_lock:
+                res = check_db(conn)
             for item in res:
                 print item
                 ws_server.send_message_to_all(item)
@@ -86,9 +89,24 @@ if __name__ == '__main__':
             process_tx(arg)
         elif cmd == 'block':
             process_block(arg)
-        elif cmd == 'serve':
-            if len(sys.argv) == 4:
-                host = sys.argv[3]
-                serve(int(arg), host)
         elif cmd == 'print':
             print_db(arg)
+        elif cmd == 'serve':
+            from bitrisk.daemon import Daemon
+            class BitcoinEventDaemon(Daemon):
+                def run(self):
+                    host = os.getenv('HOST', '127.0.0.1')
+                    serve(8888, host)
+            daemon = BitcoinEventDaemon('/tmp/bitcoin-event-daemon.pid')
+            if 'start' == arg:
+                daemon.start()
+            elif 'stop' == arg:
+                daemon.stop()
+            elif 'restart' == arg:
+                daemon.restart()
+            elif 'foreground' == arg:
+                daemon.run()
+            else:
+                print "usage: %s serve start|stop|restart|foreground" % sys.argv[0]
+                sys.exit(2)
+            sys.exit(0)

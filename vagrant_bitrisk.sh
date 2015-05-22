@@ -19,4 +19,5 @@ cd /vagrant
 export VENV_PATH=$HOME
 python setup_dependancies.py
 export HOST=0.0.0.0
-python run.py debug
+python run.py bitcoin_event.py serve start
+python run.py runserver.py debug

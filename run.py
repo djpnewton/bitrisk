@@ -24,5 +24,5 @@ basedir = os.path.dirname(os.path.realpath(__file__))
 os.chdir(basedir)
 
 # run server using virtual environment
-args = [PYTHON, 'runserver.py'] + sys.argv[1:] 
+args = [PYTHON] + sys.argv[1:] 
 call(args)

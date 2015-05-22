@@ -63,10 +63,10 @@ if __name__ == '__main__':
         start_debug()
     else:
         from bitrisk.daemon import Daemon
-        class EncelladusDaemon(Daemon):
+        class BitriskDaemon(Daemon):
             def run(self):
                 start_cherrypy()
-        daemon = EncelladusDaemon('/tmp/bitrisk-daemon.pid')
+        daemon = BitriskDaemon('/tmp/bitrisk-daemon.pid')
         if len(sys.argv) == 2:
             if 'start' == sys.argv[1]:
                 daemon.start()
