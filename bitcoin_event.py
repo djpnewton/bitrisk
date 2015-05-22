@@ -29,18 +29,25 @@ def process_block(block):
         conn.execute('insert into blocks (block, processed) values (?, 0)', (block,))
         conn.commit()
 
-def check_db(conn):
-    items = []
-    txs = conn.execute('select * from txs where processed=0').fetchall()
-    for tx in txs:
-        conn.execute('update txs set processed=1 where tx=?', (tx[0],))
-        items.append('tx: %s' % tx[0])
-    blocks = conn.execute('select * from blocks where processed=0').fetchall()
-    for block in blocks:
-        conn.execute('update blocks set processed=1 where block=?', (block[0],))
-        items.append('block: %s' % block[0])
-    conn.commit()
-    return items
+def get_db_txs(conn):
+    with db_lock:
+        items = []
+        txs = conn.execute('select * from txs where processed=0').fetchall()
+        for tx in txs:
+            conn.execute('update txs set processed=1 where tx=?', (tx[0],))
+            items.append(tx[0])
+        conn.commit()
+        return items
+
+def get_db_blocks(conn):
+    with db_lock:
+        items = []
+        blocks = conn.execute('select * from blocks where processed=0').fetchall()
+        for block in blocks:
+            conn.execute('update blocks set processed=1 where block=?', (block[0],))
+            items.append(block[0])
+        conn.commit()
+        return items
 
 def serve(port, host):
     from websocket_server import WebsocketServer
@@ -48,13 +55,33 @@ def serve(port, host):
     import signal
 
     def service_thread(ws_server, evt):
+        from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
+        from bitcoind_config import read_default_config
+        import json
+        import decimal
+        config = read_default_config()
+        testnet = ''
+        if config.has_key('testnet'):
+            testnet = config['testnet']
+        rpc_user = config['rpcuser']
+        rpc_password = config['rpcpassword']
+        rpc_connection = AuthServiceProxy("http://%s:%s@%s:%s8332"%(rpc_user, rpc_password, host, testnet))
+        
         conn = sqlite3.connect(db_filename)
         while not evt.wait(5):
-            with db_lock:
-                res = check_db(conn)
-            for item in res:
-                print item
-                ws_server.send_message_to_all(item)
+            txs = get_db_txs(conn)
+            for tx in txs:
+                print 'tx:', tx
+                tx = rpc_connection.gettransaction(tx)
+                def decimal_default(obj):
+                    if isinstance(obj, decimal.Decimal):
+                        return float(obj)
+                    raise TypeError
+                ws_server.send_message_to_all(json.dumps(tx, default=decimal_default))
+            blocks = get_db_blocks(conn)
+            for block in blocks:
+                print 'block:', block
+                ws_server.send_message_to_all(block)
 
     server = WebsocketServer(port, host)
     evt = Event()
