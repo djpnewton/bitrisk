@@ -50,14 +50,12 @@ def paginate_pagenums(row_count):
 
 @app.route('/', methods=('GET',))
 def landing():
-    if (current_user() is None):
-        return render_template('landing.html')
-    return redirect(url_for('home'))
+    return render_template('landing.html')
 
 @app.route('/transactions')
 def txs():
     return render_template('transactions.html')
 
-@app.route('/home')
-def home():
-    return render_template('home.html')
+@app.route('/bet')
+def bet():
+    return render_template('bet.html')
