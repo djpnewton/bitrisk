@@ -3,6 +3,8 @@ from flask import url_for, session, request, render_template, redirect, flash, j
 import bitrisk
 from bitrisk import app, config
 from bitrisk import User
+from bitrisk import bitcoind_rpc_connection
+import utils
 
 def current_user(session_key_name='id'):
     if session_key_name in session:
@@ -58,4 +60,10 @@ def txs():
 
 @app.route('/bet')
 def bet():
-    return render_template('bet.html')
+    address = bitcoind_rpc_connection.getnewaddress()
+    qr = utils.qrcode(address)
+    img_buf = utils.qrcode_png_buffer(qr)
+    img_data = img_buf.getvalue()
+    img_data_b64 = img_data.encode('base64').replace('\n', '')
+    data_uri = 'data:image/png;base64,%s' % img_data_b64
+    return render_template('bet.html', address=address, data_uri=data_uri)

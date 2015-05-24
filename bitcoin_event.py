@@ -56,7 +56,7 @@ def serve(port, host):
 
     def service_thread(ws_server, evt):
         from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
-        from bitcoind_config import read_default_config
+        from bitrisk.bitcoind_config import read_default_config
         import json
         import decimal
         config = read_default_config()

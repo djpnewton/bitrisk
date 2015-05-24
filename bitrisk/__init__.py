@@ -10,6 +10,8 @@ from sqlalchemy import create_engine, MetaData
 from flask_seasurf import SeaSurf
 from flask_limiter import Limiter
 import time
+from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
+from bitcoind_config import read_default_config
 
 import config
 
@@ -43,6 +45,16 @@ csrf = SeaSurf(app)
 # add rate limiting middleware
 limiter = Limiter(app)
 auth_limit = limiter.shared_limit("5/minute;1/second", scope="auth")
+
+# connect to bitcoind
+bitcoind_config = read_default_config()
+testnet = ''
+if bitcoind_config.has_key('testnet'):
+    testnet = bitcoind_config['testnet']
+rpc_user = bitcoind_config['rpcuser']
+rpc_password = bitcoind_config['rpcpassword']
+host = os.getenv('HOST', '127.0.0.1')
+bitcoind_rpc_connection = AuthServiceProxy("http://%s:%s@%s:%s8332"%(rpc_user, rpc_password, host, testnet))
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)

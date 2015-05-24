@@ -37,6 +37,8 @@ call([PIP, 'install', 'flask_seasurf'])
 call([PIP, 'install', 'flask_limiter'])
 call([PIP, 'install', 'websocket-server'])
 call([PIP, 'install', 'python-bitcoinrpc'])
+call([PIP, 'install', 'pillow'])
+call([PIP, 'install', 'qrcode'])
 
 # install bower dependencies
 shell=False
