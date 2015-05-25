@@ -54,6 +54,33 @@ def serve(port, host):
     from threading import Thread, Event
     import signal
 
+    def message_received(client, server, message):
+        print 'message_received:', message
+        cmds = message.split('|')
+        for cmd in cmds:
+            if cmd.startswith('addr='):
+                address = cmd[5:]
+                if server.watched_addresses.has_key(address):
+                    server.watched_addresses[address].append(client)
+                else:
+                    server.watched_addresses[address] = [client]
+            if cmd == 'blocks':
+                server.block_watchers.append(client)
+
+    def client_left(client, server):
+        print 'client_left:', client
+        addrs = []
+        for key in server.watched_addresses:
+            if client in server.watched_addresses[key]:
+                addrs.append(key)
+        for addr in addrs:
+            clients = server.watched_addresses[addr]
+            clients.remove(client)
+            if not clients:
+                del server.watched_addresses[addr]
+        if client in server.block_watchers:
+            server.block_watchers.remove(client)
+
     def service_thread(ws_server, evt):
         from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
         from bitrisk.bitcoind_config import read_default_config
@@ -73,17 +100,27 @@ def serve(port, host):
             for tx in txs:
                 print 'tx:', tx
                 tx = rpc_connection.gettransaction(tx)
-                def decimal_default(obj):
-                    if isinstance(obj, decimal.Decimal):
-                        return float(obj)
-                    raise TypeError
-                ws_server.send_message_to_all(json.dumps(tx, default=decimal_default))
+                for details in tx['details']:
+                    addr = details['address']
+                    if ws_server.watched_addresses.has_key(addr):
+                        def decimal_default(obj):
+                            if isinstance(obj, decimal.Decimal):
+                                return float(obj)
+                            raise TypeError
+                        msg = json.dumps(tx, default=decimal_default)
+                        for client in ws_server.watched_addresses[addr]:
+                            ws_server.send_message(client, msg)
             blocks = get_db_blocks(conn)
             for block in blocks:
                 print 'block:', block
-                ws_server.send_message_to_all(block)
+                for client in ws_server.block_watchers:
+                    ws_server.send_message(client, block)
 
     server = WebsocketServer(port, host)
+    server.watched_addresses = {}
+    server.block_watchers = []
+    server.set_fn_message_received(message_received)
+    server.set_fn_client_left(client_left)
     evt = Event()
     thread = Thread(target=service_thread, args=(server, evt))
 

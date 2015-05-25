@@ -1,4 +1,5 @@
 from flask import url_for, session, request, render_template, redirect, flash, jsonify
+import decimal
 
 import bitrisk
 from bitrisk import app, config
@@ -61,9 +62,17 @@ def txs():
 @app.route('/bet')
 def bet():
     address = bitcoind_rpc_connection.getnewaddress()
+    print 'btc address:', address
     qr = utils.qrcode(address)
     img_buf = utils.qrcode_png_buffer(qr)
     img_data = img_buf.getvalue()
     img_data_b64 = img_data.encode('base64').replace('\n', '')
     data_uri = 'data:image/png;base64,%s' % img_data_b64
-    return render_template('bet.html', address=address, data_uri=data_uri)
+    total = decimal.Decimal(bitcoind_rpc_connection.getbalance())
+    print 'btc total:', total
+    FOURPLACES = decimal.Decimal(10) ** -4
+    print 'FOURPLACES:', FOURPLACES
+    max_bet = total / 10
+    print 'max_bet:', max_bet
+    max_bet = max_bet.quantize(FOURPLACES)
+    return render_template('bet.html', address=address, data_uri=data_uri, max_bet=max_bet)

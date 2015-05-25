@@ -1,12 +1,13 @@
 {% extends "layout.html" %}
 {% block title %}Transactions{% endblock %}
 {% block content %}
-    <div id="bitcoin_events"></div>
+    <div id="bitcoin_events" class="container"></div>
     <script>
         var ws_url = 'ws://'+location.hostname+':8888';
         var sock = new WebSocket(ws_url);
         sock.onopen = function() {
             console.log('open');
+            sock.send('blocks');
         };
         sock.onmessage = function(e) {
             var data = e.data;

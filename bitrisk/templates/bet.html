@@ -1,7 +1,31 @@
 {% extends "layout.html" %}
 {% block title %}Make a bet{% endblock %}
 {% block content %}
-  <h1>Make a bet</h1>
-  <img src="{{data_uri}}"/>
-  {{address}}
+    <div class="container">
+        <h1>Make a bet</h1>
+        Maximum bet amount is {{max_bet}} BTC</br>
+        <img class="center-block" src="{{data_uri}}"/></br>
+        <img class="center-block" src="/static/images/ajax-loader.gif"/></br>
+        <p class="text-center">
+            <a href="bitcoin:{{address}}">{{address}}</a>
+            <div id="bitcoin_events"></div>
+        </p>
+    </div>
+    <script>
+        var ws_url = 'ws://'+location.hostname+':8888';
+        var sock = new WebSocket(ws_url);
+        sock.onopen = function() {
+            console.log('open');
+            sock.send('addr={{address}}');
+        };
+        sock.onmessage = function(e) {
+            var data = e.data;
+            console.log('message', data);
+            var e = document.getElementById('bitcoin_events');
+            e.innerHTML += data + '</br>';
+        };
+        sock.onclose = function() {
+            console.log('close');
+        };
+    </script>
 {% endblock %}
