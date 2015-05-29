@@ -54,6 +54,14 @@ def paginate_pagenums(row_count):
             pagenums.append(max_pages)
     return pagenums, page
 
+def valid_address(address):
+    try:
+        if bitcoind_rpc_connection.getaccount(address) == BETS:
+            return True
+    except JSONRPCException:
+        pass
+    return False
+
 @app.route('/', methods=('GET',))
 def landing():
     return render_template('landing.html')
@@ -70,10 +78,7 @@ def bet():
 
 @app.route('/bet/<address>')
 def bet_addr(address):
-    try:
-        if not bitcoind_rpc_connection.getaccount(address) == BETS:
-            return 'invalid address'
-    except JSONRPCException:
+    if not valid_address(address):
         return 'invalid address'
     qr = utils.qrcode(address)
     img_buf = utils.qrcode_png_buffer(qr)
@@ -89,10 +94,14 @@ def bet_addr(address):
     max_bet = max_bet.quantize(FOURPLACES)
     return render_template('bet.html', address=address, data_uri=data_uri, max_bet=max_bet)
 
-@app.route('/bet/check/<txid>')
-def bet_check(txid):
-    #TODO: create table for processed txids
-    #if controller.check_txid(txid):
-    #   return blah blah blah
-    return jsonify(result=False)
-
+@app.route('/bet/check/<addr>/<txid>')
+def bet_check(addr, txid):
+    if not valid_address(addr):
+        return jsonify(result=False, msg='invalid address')
+    bet = bitrisk.bet_add(addr, txid)
+    if bet.processed:
+        return jsonify(result=False, msg='transaction already processed')
+    payout = bitrisk.bet_process(bet)
+    if payout:
+        return jsonify(result=True, msg='winner')
+    return jsonify(result=False, msg='loser')

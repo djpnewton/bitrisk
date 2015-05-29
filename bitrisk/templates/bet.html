@@ -28,8 +28,11 @@
                     var msg = 'received ' + details['amount'] + ' BTC (' + obj['txid'] + ')';
                     var e = document.getElementById('bitcoin_events');
                     e.innerHTML += msg + '</br>';
-                    //TODO api to register payment which will log it to db
-                    // and perform dice roll and payment
+                    $.ajax('/bet/check/' + details['address'] + '/' + obj['txid']).done(function(res) {
+                        var msg = 'check: ' + res.result + ' ' + res.msg;
+                        e.innerHTML += msg + '</br>';
+                    });
+
                 }
             }
         };

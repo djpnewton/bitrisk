@@ -10,6 +10,7 @@ from sqlalchemy import create_engine, MetaData
 from flask_seasurf import SeaSurf
 from flask_limiter import Limiter
 import time
+import random
 from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
 from bitcoind_config import read_default_config
 
@@ -56,20 +57,31 @@ rpc_password = bitcoind_config['rpcpassword']
 host = os.getenv('HOST', '127.0.0.1')
 bitcoind_rpc_connection = AuthServiceProxy("http://%s:%s@%s:%s8332"%(rpc_user, rpc_password, host, testnet))
 
+# random number generator
+cryptogen = random.SystemRandom()
+house_edge = 0.01
+
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String, unique=True)
 
+class Bet(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    address = db.Column(db.String)
+    txid = db.Column(db.String, unique=True)
+    processed = db.Column(db.Boolean)
+
+class Payout(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    bet_id = db.Column(db.Integer, db.ForeignKey('bet.id'))
+    processed = db.Column(db.Boolean)
+
 def init_db():
     db.create_all()
-
-def init_threads():
-    pass
 
 @app.before_first_request
 def init_all_on_first_request():
     init_db()
-    init_threads()
 
 @app.before_request
 def refresh_session():
@@ -82,13 +94,38 @@ def refresh_session():
     else:
         session['gen_time'] = time.time()
 
-def kill_threads():
-    pass
-
 def user_create(email):
     user = User(email=email)
     db.session.add(user)
     db.session.commit()
     return user
+
+def bet_add(addr, txid):
+    # check if bet entry already exists
+    bet = Bet.query.filter_by(txid=txid).first()
+    if bet:
+        return bet
+    # create new entry
+    bet = Bet(address=addr, txid=txid)
+    db.session.add(bet)
+    db.session.commit()
+    return bet
+
+def bet_process(bet):
+    payout = None
+    # create payout if bet wins
+    num = cryptogen.random() - house_edge
+    if num < 0.5:
+        payout = Payout(bet_id=bet.id, processed=False)
+        db.session.add(payout)
+    # bet now processed
+    bet.processed = 1
+    db.session.add(bet)
+    # commit changes and return payout
+    db.session.commit()
+    return payout
+
+
+
 
 import bitrisk.views

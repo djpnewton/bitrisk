@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-from bitrisk import app, kill_threads
+from bitrisk import app
 
 import os
 host = os.getenv('HOST', '127.0.0.1')
@@ -46,16 +46,12 @@ def start_cherrypy():
         'server.socket_host': '0.0.0.0'
     })
     # Start the CherryPy WSGI web server
-    cherrypy.engine.subscribe('stop', kill_threads)
     cherrypy.engine.start()
     cherrypy.engine.block()
 
 def start_debug():
     app.debug = True
-    try:
-        app.run(host, port)
-    finally:
-        kill_threads()
+    app.run(host, port)
 
 if __name__ == '__main__':
     import sys
