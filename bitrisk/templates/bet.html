@@ -21,8 +21,17 @@
         sock.onmessage = function(e) {
             var data = e.data;
             console.log('message', data);
-            var e = document.getElementById('bitcoin_events');
-            e.innerHTML += data + '</br>';
+            var obj = JSON.parse(data);
+            for (var i = 0; i < obj['details'].length; i++) {
+                var details = obj['details'][i];
+                if (details['category'] == 'receive' && details['address'] == '{{address}}') {
+                    var msg = 'received ' + details['amount'] + ' BTC (' + obj['txid'] + ')';
+                    var e = document.getElementById('bitcoin_events');
+                    e.innerHTML += msg + '</br>';
+                    //TODO api to register payment which will log it to db
+                    // and perform dice roll and payment
+                }
+            }
         };
         sock.onclose = function() {
             console.log('close');

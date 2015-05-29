@@ -2,19 +2,21 @@
 
 set -e
 
-# start bitcoin server
-echo write bitcoin.conf
-if [ ! -d ~/.bitcoin ]; then
-    mkdir ~/.bitcoin
+if [ "$1" != "skip-bitcoind" ]; then
+	# start bitcoin server
+	echo write bitcoin.conf
+	if [ ! -d ~/.bitcoin ]; then
+	    mkdir ~/.bitcoin
+	fi
+	echo "testnet=1" > ~/.bitcoin/bitcoin.conf
+	echo "rpcuser=user" >> ~/.bitcoin/bitcoin.conf
+	echo "rpcpassword=test" >> ~/.bitcoin/bitcoin.conf
+	echo stop bitcoind
+	bitcoin-cli stop || echo ok
+	sleep 5s
+	echo start bitcoind
+	bitcoind -server -daemon -walletnotify="/vagrant/bitcoin_event.py tx %s" -blocknotify="/vagrant/bitcoin_event.py block %s"
 fi
-echo "testnet=1" > ~/.bitcoin/bitcoin.conf
-echo "rpcuser=user" >> ~/.bitcoin/bitcoin.conf
-echo "rpcpassword=test" >> ~/.bitcoin/bitcoin.conf
-echo stop bitcoind
-bitcoin-cli stop || echo ok
-sleep 5s
-echo start bitcoind
-bitcoind -server -daemon -walletnotify="/vagrant/bitcoin_event.py tx %s" -blocknotify="/vagrant/bitcoin_event.py block %s"
 
 
 cd /vagrant

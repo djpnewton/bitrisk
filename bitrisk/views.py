@@ -1,11 +1,14 @@
 from flask import url_for, session, request, render_template, redirect, flash, jsonify
 import decimal
+from bitcoinrpc.authproxy import JSONRPCException
 
 import bitrisk
 from bitrisk import app, config
 from bitrisk import User
 from bitrisk import bitcoind_rpc_connection
 import utils
+
+BETS = 'bets'
 
 def current_user(session_key_name='id'):
     if session_key_name in session:
@@ -61,14 +64,23 @@ def txs():
 
 @app.route('/bet')
 def bet():
-    address = bitcoind_rpc_connection.getnewaddress()
+    address = bitcoind_rpc_connection.getnewaddress(BETS)
     print 'btc address:', address
+    return redirect('/bet/%s' % address)
+
+@app.route('/bet/<address>')
+def bet_addr(address):
+    try:
+        if not bitcoind_rpc_connection.getaccount(address) == BETS:
+            return 'invalid address'
+    except JSONRPCException:
+        return 'invalid address'
     qr = utils.qrcode(address)
     img_buf = utils.qrcode_png_buffer(qr)
     img_data = img_buf.getvalue()
     img_data_b64 = img_data.encode('base64').replace('\n', '')
     data_uri = 'data:image/png;base64,%s' % img_data_b64
-    total = decimal.Decimal(bitcoind_rpc_connection.getbalance())
+    total = decimal.Decimal(bitcoind_rpc_connection.getbalance(BETS))
     print 'btc total:', total
     FOURPLACES = decimal.Decimal(10) ** -4
     print 'FOURPLACES:', FOURPLACES
@@ -76,3 +88,11 @@ def bet():
     print 'max_bet:', max_bet
     max_bet = max_bet.quantize(FOURPLACES)
     return render_template('bet.html', address=address, data_uri=data_uri, max_bet=max_bet)
+
+@app.route('/bet/check/<txid>')
+def bet_check(txid):
+    #TODO: create table for processed txids
+    #if controller.check_txid(txid):
+    #   return blah blah blah
+    return jsonify(result=False)
+
