@@ -96,12 +96,14 @@ def bet_addr(address):
 
 @app.route('/bet/check/<addr>/<txid>')
 def bet_check(addr, txid):
+    image_win = '/static/images/winner/' + bitrisk.image_random('winner')
+    image_lose = '/static/images/loser/' + bitrisk.image_random('loser')
     if not valid_address(addr):
-        return jsonify(result=False, msg='invalid address')
+        return jsonify(result=False, msg='invalid address', image=image_lose)
     bet = bitrisk.bet_add(addr, txid)
     if bet.processed:
-        return jsonify(result=False, msg='transaction already processed')
+        return jsonify(result=False, msg='transaction already processed', image=image_lose)
     payout = bitrisk.bet_process(bet)
     if payout:
-        return jsonify(result=True, msg='winner')
-    return jsonify(result=False, msg='loser')
+        return jsonify(result=True, msg='', image=image_win)
+    return jsonify(result=False, msg='', image=image_lose)

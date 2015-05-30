@@ -8,12 +8,28 @@
         <img class="center-block" src="/static/images/ajax-loader.gif"/></br>
         <p class="text-center">
             <a href="bitcoin:{{address}}">{{address}}</a>
-            <div id="bitcoin_events"></div>
         </p>
     </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="bet-reveal" tabindex="-1" role="dialog" aria-labelledby="bet-reveal-label" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title" id="bet-reveal-label">Payment received...</h4>
+                </div>
+                <div class="modal-body">
+                    <img class="center-block" width="300px" src="/static/images/loop-roulette.gif" id="bet-reveal-image"/>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         var ws_url = 'ws://'+location.hostname+':8888';
         var sock = new WebSocket(ws_url);
+        var last_txid = '';
+        var hide_modal_timeout_id = null;
         sock.onopen = function() {
             console.log('open');
             sock.send('addr={{address}}');
@@ -22,15 +38,33 @@
             var data = e.data;
             console.log('message', data);
             var obj = JSON.parse(data);
+            // if we send from the same wallet we will get multiple notifcations
+            if (last_txid.localeCompare(obj['txid']) == 0) {
+                return;
+            }
+            last_txid = obj['txid'];
             for (var i = 0; i < obj['details'].length; i++) {
                 var details = obj['details'][i];
                 if (details['category'] == 'receive' && details['address'] == '{{address}}') {
                     var msg = 'received ' + details['amount'] + ' BTC (' + obj['txid'] + ')';
-                    var e = document.getElementById('bitcoin_events');
-                    e.innerHTML += msg + '</br>';
                     $.ajax('/bet/check/' + details['address'] + '/' + obj['txid']).done(function(res) {
-                        var msg = 'check: ' + res.result + ' ' + res.msg;
-                        e.innerHTML += msg + '</br>';
+                        clearTimeout(hide_modal_timeout_id);
+                        $('#bet-reveal-label').text('Payment received...');
+                        $('#bet-reveal-image').attr('src', '/static/images/loop-roulette.gif');
+                        $('#bet-reveal').modal();
+                        setTimeout(function() {
+                            if (res.result)
+                                $('#bet-reveal-label').text('You win!');
+                            else if (res.msg.length > 0)
+                                $('#bet-reveal-label').text('Oops (' + res.msg + ')');
+                            else
+                                $('#bet-reveal-label').text('You lose try again =)');
+                            $('#bet-reveal-image').attr('src', res.image);
+                            $('#bet-reveal').modal('show');
+                            hide_modal_timeout_id = setTimeout(function() {
+                                $('#bet-reveal').modal('hide');
+                                }, 10000);
+                            }, 2000);
                     });
 
                 }

@@ -61,6 +61,9 @@ bitcoind_rpc_connection = AuthServiceProxy("http://%s:%s@%s:%s8332"%(rpc_user, r
 cryptogen = random.SystemRandom()
 house_edge = 0.01
 
+# image directory
+image_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'static/images')
+
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String, unique=True)
@@ -125,7 +128,8 @@ def bet_process(bet):
     db.session.commit()
     return payout
 
-
-
+def image_random(subdir):
+    files = os.listdir(os.path.join(image_dir, subdir))
+    return files[random.randint(0, len(files) - 1)]
 
 import bitrisk.views
