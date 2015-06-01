@@ -1,0 +1,17 @@
+{% extends "layout.html" %}
+{% block title %}Payouts{% endblock %}
+{% block content %}
+    <div class="container">
+        <h1>Payouts</h1>
+        <table class="table">
+            <thead>
+                <td>id</td><td>bet id</td><td>processed</td><td>txid</td>
+            </thead>
+            {% for payout in payouts %}
+            <tr>
+                <td>{{payout['id']}}</td><td>{{payout['bet_id']}}</td><td>{{payout['processed']}}</td><td>{{payout['txid']}}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+{% endblock %}

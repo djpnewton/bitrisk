@@ -1,0 +1,17 @@
+{% extends "layout.html" %}
+{% block title %}Refunds{% endblock %}
+{% block content %}
+    <div class="container">
+        <h1>Refunds</h1>
+        <table class="table">
+            <thead>
+                <td>id</td><td>bet id</td><td>processed</td><td>txid</td>
+            </thead>
+            {% for refund in refunds %}
+            <tr>
+                <td>{{refund['id']}}</td><td>{{refund['bet_id']}}</td><td>{{refund['processed']}}</td><td>{{refund['txid']}}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+{% endblock %}

@@ -11,6 +11,7 @@ from flask_seasurf import SeaSurf
 from flask_limiter import Limiter
 import time
 import random
+import decimal
 from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
 from bitcoind_config import read_default_config
 
@@ -59,10 +60,14 @@ bitcoind_rpc_connection = AuthServiceProxy("http://%s:%s@%s:%s8332"%(rpc_user, r
 
 # random number generator
 cryptogen = random.SystemRandom()
-house_edge = 0.01
 
 # image directory
 image_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'static/images')
+
+# app contants
+BETS = 'bets'
+HOUSE_EDGE = 0.01
+BET_MAX_FACTOR = 0.01
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -78,6 +83,13 @@ class Payout(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     bet_id = db.Column(db.Integer, db.ForeignKey('bet.id'))
     processed = db.Column(db.Boolean)
+    txid = db.Column(db.String)
+
+class Refund(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    bet_id = db.Column(db.Integer, db.ForeignKey('bet.id'))
+    processed = db.Column(db.Boolean)
+    txid = db.Column(db.String)
 
 def init_db():
     db.create_all()
@@ -103,6 +115,20 @@ def user_create(email):
     db.session.commit()
     return user
 
+def bet_max_amount():
+    balance = 0
+    try:
+        balance = bitcoind_rpc_connection.getbalance(BETS)
+    except JSONRPCException:
+        return 0
+    balance = decimal.Decimal(balance)
+    print 'btc balance:', balance
+    FOURPLACES = decimal.Decimal(10) ** -4
+    print 'FOURPLACES:', FOURPLACES
+    max_bet = balance * decimal.Decimal(BET_MAX_FACTOR)
+    print 'max_bet:', max_bet
+    return max_bet.quantize(FOURPLACES)
+
 def bet_add(addr, txid):
     # check if bet entry already exists
     bet = Bet.query.filter_by(txid=txid).first()
@@ -114,19 +140,55 @@ def bet_add(addr, txid):
     db.session.commit()
     return bet
 
+def bet_details(bet):
+    try:
+        tx = bitcoind_rpc_connection.gettransaction(bet.txid)
+    except JSONRPCException:
+        return None
+    total_in = decimal.Decimal(0)
+    for details in tx['details']:
+        if details['address'] == bet.address and details['category'] == 'receive':
+            total_in += decimal.Decimal(details['amount'])
+    return tx, total_in
+
 def bet_process(bet):
+    refund = None
     payout = None
-    # create payout if bet wins
-    num = cryptogen.random() - house_edge
-    if num < 0.5:
-        payout = Payout(bet_id=bet.id, processed=False)
-        db.session.add(payout)
+    # get bet details
+    details = bet_details(bet)
+    if not details:
+        return refund, payout
+    tx, total_in = details
+    # create refund if bet is too high
+    if total_in > bet_max_amount():
+        refund = Refund(bet_id=bet.id, processed=False)
+        db.session.add(refund)
+    else:
+        # create payout if bet wins
+        num = cryptogen.random() - HOUSE_EDGE
+        if num < 0.5:
+            payout = Payout(bet_id=bet.id, processed=False)
+            db.session.add(payout)
     # bet now processed
     bet.processed = 1
     db.session.add(bet)
-    # commit changes and return payout
+    # commit changes and return refund and or payout
     db.session.commit()
-    return payout
+    return refund, payout
+
+def bet_valid_address(address):
+    try:
+        if bitcoind_rpc_connection.getaccount(address) == BETS:
+            return True
+    except JSONRPCException:
+        pass
+    return False
+
+def bet_address_create():
+    try:
+        return bitcoind_rpc_connection.getnewaddress(BETS)
+    except JSONRPCException:
+        return 'ERROR'
 
 def image_random(subdir):
     files = os.listdir(os.path.join(image_dir, subdir))

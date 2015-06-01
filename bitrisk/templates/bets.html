@@ -1,0 +1,17 @@
+{% extends "layout.html" %}
+{% block title %}Bets{% endblock %}
+{% block content %}
+    <div class="container">
+        <h1>Bets</h1>
+        <table class="table">
+            <thead>
+                <td>id</td><td>txid</td><td>address</td><td>processed</td>
+            </thead>
+            {% for bet in bets %}
+            <tr>
+                <td>{{bet['id']}}</td><td>{{bet['txid']}}</td><td>{{bet['address']}}</td><td>{{bet['processed']}}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+{% endblock %}
