@@ -3,7 +3,7 @@
 set -e
 
 apt-get install -y python-software-properties
-add-apt-repository ppa:bitcoin/bitcoin
+add-apt-repository -y ppa:bitcoin/bitcoin
 apt-get update
 apt-get install -y bitcoind
 apt-get install -y vim
