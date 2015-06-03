@@ -21,17 +21,17 @@ def signal_handler(signal, frame):
     evt.set()
 signal.signal(signal.SIGINT, signal_handler)
 
-def tx_details(rpc_connection, txid):
+def tx_details(rpc_connection, txid, address):
     tx = rpc_connection.gettransaction(txid)
     if tx['confirmations'] == 0:
         print '  confirmations == 0'
         return
     total_in = decimal.Decimal(0)
     for details in tx['details']:
-        if details['address'] == bet['address'] and details['category'] == 'receive':
+        if details['address'] == address and details['category'] == 'receive':
             total_in += decimal.Decimal(details['amount'])
     print '  total_in:', total_in
-    return total_in
+    return tx, total_in
 
 def tx_parent_address(rpc_connection, txid):
     tx = rpc_connection.getrawtransaction(txid, 1)
@@ -47,13 +47,13 @@ def tx_parent_address(rpc_connection, txid):
 def process_payout(rpc_connection, payout):
     print 'processing payout: id=%d, bet_id=%d, processed=%d' % (payout['id'], payout['bet_id'], payout['processed'])
     bet = conn.execute('select * from bet where id=?', (payout['bet_id'],)).fetchone()
-    tx, total_in = tx_details(rpc_connection, bet['txid'])
+    tx, total_in = tx_details(rpc_connection, bet['txid'], bet['address'])
     total_payout = total_in * 2
     print '  total_payout:', total_payout
     balance = rpc_connection.getbalance(bitrisk.BETS, 1)
     if balance >= total_payout:
         # get address bet was made from
-        txid_parent, parent_address = tx_parent_address(bet['txid'])
+        txid_parent, parent_address = tx_parent_address(rpc_connection, bet['txid'])
         # send winnings
         txid = rpc_connection.sendfrom(bitrisk.BETS, parent_address, float(total_payout))
         conn.execute('update payout set txid=?, processed=1 where id=?', (txid, payout['id']))        
@@ -65,11 +65,11 @@ def process_payout(rpc_connection, payout):
 def process_refund(rpc_connection, refund):
     print 'processing refund: id=%d, bet_id=%d, processed=%d' % (refund['id'], refund['bet_id'], refund['processed'])
     bet = conn.execute('select * from bet where id=?', (refund['bet_id'],)).fetchone()
-    tx, total_in = tx_details(rpc_connection, bet['txid'])
+    tx, total_in = tx_details(rpc_connection, bet['txid'], bet['address'])
     balance = rpc_connection.getbalance(bitrisk.BETS, 1)
     if balance >= total_in:
         # get address bet was made from
-        txid_parent, parent_address = tx_parent_address(bet['txid'])
+        txid_parent, parent_address = tx_parent_address(rpc_connection, bet['txid'])
         # send winnings
         txid = rpc_connection.sendfrom(bitrisk.BETS, parent_address, float(total_in))
         conn.execute('update payout set txid=?, processed=1 where id=?', (txid, payout['id']))        

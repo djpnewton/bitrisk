@@ -9,6 +9,7 @@ if [ "$1" != "skip-bitcoind" ]; then
 	    mkdir ~/.bitcoin
 	fi
 	echo "testnet=1" > ~/.bitcoin/bitcoin.conf
+	echo "txindex=1" >> ~/.bitcoin/bitcoin.conf
 	echo "rpcuser=user" >> ~/.bitcoin/bitcoin.conf
 	echo "rpcpassword=test" >> ~/.bitcoin/bitcoin.conf
 	echo stop bitcoind
