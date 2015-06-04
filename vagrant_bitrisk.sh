@@ -2,6 +2,13 @@
 
 set -e
 
+cd /vagrant
+export VENV_PATH=$HOME
+
+echo stop bitcoin_event.py and payouts.py
+python run.py bitcoin_event.py serve stop || echo ok
+python run.py payouts.py stop || echo ok
+
 if [ "$1" != "skip-bitcoind" ]; then
 	# start bitcoin server
 	echo write bitcoin.conf
@@ -20,14 +27,11 @@ if [ "$1" != "skip-bitcoind" ]; then
 fi
 
 
-cd /vagrant
-
-export VENV_PATH=$HOME
 echo setup python dependancies 
 python setup_dependancies.py
 export HOST=0.0.0.0
-echo restart bitcoin_event.py
-python run.py bitcoin_event.py serve stop || echo ok
+echo start bitcoin_event.py and payouts.py
 python run.py bitcoin_event.py serve start
+python run.py payouts.py start
 echo start bitrisk app
 python run.py runserver.py debug

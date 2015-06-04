@@ -30,15 +30,7 @@ os.chdir(basedir)
 # install virtual environment
 if not os.path.isdir(VENV):
     call([VIRTUALENV, VENV])
-call([PIP, 'install', 'flask'])
-call([PIP, 'install', 'flask_sqlalchemy'])
-call([PIP, 'install', 'flask_kvsession'])
-call([PIP, 'install', 'flask_seasurf'])
-call([PIP, 'install', 'flask_limiter'])
-call([PIP, 'install', 'websocket-server'])
-call([PIP, 'install', 'python-bitcoinrpc'])
-call([PIP, 'install', 'pillow'])
-call([PIP, 'install', 'qrcode'])
+call([PIP, 'install', '-r', 'requirements.txt'])
 
 # install bower dependencies
 shell=False

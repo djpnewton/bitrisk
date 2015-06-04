@@ -72,7 +72,7 @@ def process_refund(rpc_connection, refund):
         txid_parent, parent_address = tx_parent_address(rpc_connection, bet['txid'])
         # send winnings
         txid = rpc_connection.sendfrom(bitrisk.BETS, parent_address, float(total_in))
-        conn.execute('update payout set txid=?, processed=1 where id=?', (txid, payout['id']))        
+        conn.execute('update refund set txid=?, processed=1 where id=?', (txid, refund['id']))        
         conn.commit()
         print 'refund txid:', txid
     else:
@@ -90,7 +90,7 @@ def payouts():
     host = os.getenv('HOST', '127.0.0.1')
     rpc_connection = AuthServiceProxy("http://%s:%s@%s:%s8332"%(rpc_user, rpc_password, host, testnet))
 
-    while not evt.wait(5):
+    while not evt.wait(5 * 60):
         print 'process payouts/refunds'
         balance = rpc_connection.getbalance(bitrisk.BETS, 1)
         print 'balance:', balance
@@ -103,8 +103,7 @@ def payouts():
         refunds = conn.execute('select * from refund').fetchall()
         for refund in refunds:
             if not refund['processed']:
-                #TODO
-                pass
+                process_refund(rpc_connection, refund)
 
 if __name__ == '__main__':
     if len(sys.argv) >= 2:

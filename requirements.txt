@@ -1,0 +1,9 @@
+flask
+flask_sqlalchemy
+flask_kvsession
+flask_seasurf
+flask_limiter
+websocket-server
+python-bitcoinrpc
+pillow
+qrcode
