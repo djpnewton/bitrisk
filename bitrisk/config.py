@@ -19,6 +19,9 @@ class Config():
         self.main.debug = config.getboolean('main', 'debug')
         self.main.db_connection = config.get('main', 'db_connection')
         self.main.paginate_row_count = config.getint('main', 'paginate_row_count')
+        self.main.bitcoin_conf_filename = config.get('main', 'bitcoin_conf_filename')
+        if not self.main.bitcoin_conf_filename:
+            self.main.bitcoin_conf_filename = None
 
         # email
         self.email = BunchOParams()

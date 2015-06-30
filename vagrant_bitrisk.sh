@@ -12,18 +12,18 @@ python run.py payouts.py stop || echo ok
 if [ "$1" != "skip-bitcoind" ]; then
 	# start bitcoin server
 	echo write bitcoin.conf
-	if [ ! -d ~/.bitcoin ]; then
-	    mkdir ~/.bitcoin
+	DATADIR=~/.bitcoin
+	if [ ! -d $DATADIR ]; then
+		mkdir $DATADIR
 	fi
-	echo "testnet=1" > ~/.bitcoin/bitcoin.conf
-	echo "txindex=1" >> ~/.bitcoin/bitcoin.conf
-	echo "rpcuser=user" >> ~/.bitcoin/bitcoin.conf
-	echo "rpcpassword=test" >> ~/.bitcoin/bitcoin.conf
+	echo "testnet=0" > $DATADIR/bitcoin.conf
+	echo "rpcuser=user" >> $DATADIR/bitcoin.conf
+	echo "rpcpassword=test" >> $DATADIR/bitcoin.conf
 	echo stop bitcoind
 	bitcoin-cli stop || echo ok
 	sleep 5s
 	echo start bitcoind
-	bitcoind -server -daemon -walletnotify="/vagrant/bitcoin_event.py tx %s" -blocknotify="/vagrant/bitcoin_event.py block %s"
+	bitcoind -server -daemon -datadir="$DATADIR" -walletnotify="/vagrant/bitcoin_event.py tx %s" -blocknotify="/vagrant/bitcoin_event.py block %s"
 fi
 
 

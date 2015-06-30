@@ -49,7 +49,7 @@ limiter = Limiter(app)
 auth_limit = limiter.shared_limit("5/minute;1/second", scope="auth")
 
 # connect to bitcoind
-bitcoind_config = read_default_config()
+bitcoind_config = read_default_config(config.main.bitcoin_conf_filename)
 testnet = ''
 if bitcoind_config.has_key('testnet'):
     testnet = bitcoind_config['testnet']
