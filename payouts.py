@@ -90,7 +90,7 @@ def payouts():
     host = os.getenv('HOST', '127.0.0.1')
     rpc_connection = AuthServiceProxy("http://%s:%s@%s:%s8332"%(rpc_user, rpc_password, host, testnet))
 
-    while not evt.wait(5 * 60):
+    while not evt.wait(1 * 60):
         print 'process payouts/refunds'
         balance = rpc_connection.getbalance(bitrisk.BETS, 1)
         print 'balance:', balance

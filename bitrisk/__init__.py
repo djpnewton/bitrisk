@@ -67,7 +67,7 @@ image_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'static/im
 # app contants
 BETS = 'bets'
 HOUSE_EDGE = 0.01
-BET_MAX_FACTOR = 0.01
+BET_MAX_FACTOR = 0.05
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)

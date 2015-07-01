@@ -54,10 +54,6 @@ def paginate_pagenums(row_count):
 def landing():
     return render_template('landing.html')
 
-@app.route('/transactions')
-def txs():
-    return render_template('transactions.html')
-
 @app.route('/bet')
 def bet():
     address = bitrisk.bet_address_create()
